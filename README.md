@@ -2,9 +2,11 @@
 
 **Code Execution Visualizer & Explainer** - Generate step-by-step visual explanations of Python code execution.
 
-[![PyPI version](https://badge.fury.io/py/explainflow.svg)](https://badge.fury.io/py/explainflow)
+[![PyPI version](https://img.shields.io/pypi/v/explainflow.svg)](https://pypi.org/project/explainflow/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/explainflow.svg)](https://pypi.org/project/explainflow/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![GitHub stars](https://img.shields.io/github/stars/DevaVirathan/explainflow?style=social)](https://github.com/DevaVirathan/explainflow)
 
 ## ✨ Features
 
