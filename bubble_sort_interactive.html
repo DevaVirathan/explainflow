@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExplainFlow - Code Execution Trace</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #3c3c3c;
+            margin-bottom: 20px;
+        }
+        .header h1 { color: #569cd6; }
+        .main { display: flex; gap: 20px; }
+        .code-panel {
+            flex: 1;
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .code-line {
+            display: flex;
+            padding: 2px 0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+        }
+        .code-line.active {
+            background: #264f78;
+            border-radius: 4px;
+        }
+        .line-number {
+            color: #858585;
+            width: 40px;
+            text-align: right;
+            padding-right: 15px;
+            user-select: none;
+        }
+        .line-content { flex: 1; white-space: pre; }
+        .info-panel {
+            width: 350px;
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .step-info { margin-bottom: 20px; }
+        .step-header {
+            color: #569cd6;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .step-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #3c3c3c;
+            margin-left: 10px;
+        }
+        .explanation {
+            color: #4ec9b0;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(78, 201, 176, 0.1);
+            border-radius: 4px;
+        }
+        .variables { margin-top: 15px; }
+        .variable {
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            padding: 3px 0;
+        }
+        .variable.changed { color: #dcdcaa; }
+        .variable .name { color: #9cdcfe; }
+        .variable .value { color: #ce9178; }
+        .variable .type { color: #4ec9b0; font-size: 11px; }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #3c3c3c;
+            border-radius: 8px;
+        }
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            background: #569cd6;
+            color: white;
+        }
+        .controls button:hover { opacity: 0.9; }
+        .controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .step-counter { 
+            font-size: 16px; 
+            padding: 10px;
+            min-width: 100px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 ExplainFlow</h1>
+            <p>Code Execution Trace</p>
+        </div>
+        
+        <div class="main">
+            <div class="code-panel">
+                <h3 style="margin-bottom: 15px;">Source Code</h3>
+                <div class="code-line" data-line="1"><span class="line-number">1</span><span class="line-content">&nbsp;</span></div><div class="code-line" data-line="2"><span class="line-number">2</span><span class="line-content">def bubble_sort(arr):</span></div><div class="code-line" data-line="3"><span class="line-number">3</span><span class="line-content">    n = len(arr)</span></div><div class="code-line" data-line="4"><span class="line-number">4</span><span class="line-content">    for i in range(n):</span></div><div class="code-line" data-line="5"><span class="line-number">5</span><span class="line-content">        for j in range(0, n-i-1):</span></div><div class="code-line" data-line="6"><span class="line-number">6</span><span class="line-content">            if arr[j] &gt; arr[j+1]:</span></div><div class="code-line" data-line="7"><span class="line-number">7</span><span class="line-content">                arr[j], arr[j+1] = arr[j+1], arr[j]</span></div><div class="code-line" data-line="8"><span class="line-number">8</span><span class="line-content">    return arr</span></div><div class="code-line" data-line="9"><span class="line-number">9</span><span class="line-content">&nbsp;</span></div><div class="code-line" data-line="10"><span class="line-number">10</span><span class="line-content">numbers = [64, 34, 25, 12, 22, 11, 90]</span></div><div class="code-line" data-line="11"><span class="line-number">11</span><span class="line-content">sorted_nums = bubble_sort(numbers.copy())</span></div><div class="code-line" data-line="12"><span class="line-number">12</span><span class="line-content">print(f&quot;Sorted: {sorted_nums}&quot;)</span></div><div class="code-line" data-line="13"><span class="line-number">13</span><span class="line-content">&nbsp;</span></div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="step-info">
+                    <div class="step-header">
+                        Step <span id="stepNum">1</span>
+                        <span class="step-type" id="stepType">LINE</span>
+                    </div>
+                    <div id="lineInfo" style="color: #6a9955; margin: 5px 0;"></div>
+                    <div class="explanation" id="explanation"></div>
+                </div>
+                
+                <div class="variables">
+                    <h4>Variables</h4>
+                    <div id="variablesList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="firstBtn">⏮ First</button>
+            <button id="prevBtn">◀ Previous</button>
+            <span class="step-counter"><span id="currentStep">1</span> / <span id="totalSteps">81</span></span>
+            <button id="nextBtn">Next ▶</button>
+            <button id="lastBtn">Last ⏭</button>
+            <button id="playBtn">▶ Play</button>
+        </div>
+    </div>
+    
+    <script>
+        const steps = [{"number": 1, "line": 0, "type": "call", "content": "", "explanation": "Calling function", "variables": {}}, {"number": 2, "line": 2, "type": "assignment", "content": "    n = len(arr)", "explanation": "Assignment: n = len(arr)", "variables": {}}, {"number": 3, "line": 10, "type": "assignment", "content": "sorted_nums = bubble_sort(numbers.copy())", "explanation": "Assignment: sorted_nums = bubble_sort(numbers.copy())", "variables": {}}, {"number": 4, "line": 11, "type": "line", "content": "print(f\"Sorted: {sorted_nums}\")", "explanation": "Executing: print(f\"Sorted: {sorted_nums}\")", "variables": {"numbers": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}}}, {"number": 5, "line": 2, "type": "call", "content": "    n = len(arr)", "explanation": "Calling function", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}}}, {"number": 6, "line": 3, "type": "loop_start", "content": "    for i in range(n):", "explanation": "Starting loop: for i in range(n):", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}}}, {"number": 7, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}}}, {"number": 8, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}}}, {"number": 9, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Assignment: arr[j], arr[j+1] = arr[j+1], arr[j]", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 10, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 11, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 64, 25, 12, 22, 11, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 12, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 1", "variables": {"arr": {"value": "[34, 64, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": true}}}, {"number": 13, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[34, 64, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 14, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 64, 12, 22, 11, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 15, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 2", "variables": {"arr": {"value": "[34, 25, 64, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": true}}}, {"number": 16, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[34, 25, 64, 12, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 17, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 12, 64, 22, 11, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 18, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 3", "variables": {"arr": {"value": "[34, 25, 12, 64, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": true}}}, {"number": 19, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[34, 25, 12, 64, 22, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 20, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 12, 22, 64, 11, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 21, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 4", "variables": {"arr": {"value": "[34, 25, 12, 22, 64, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": true}}}, {"number": 22, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[34, 25, 12, 22, 64, 11, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": false}}}, {"number": 23, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": false}}}, {"number": 24, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 5", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "5", "type": "int", "changed": true}}}, {"number": 25, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "5", "type": "int", "changed": false}}}, {"number": 26, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "0", "type": "int", "changed": false}, "j": {"value": "5", "type": "int", "changed": false}}}, {"number": 27, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": true}, "j": {"value": "5", "type": "int", "changed": false}}}, {"number": 28, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 0", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": true}}}, {"number": 29, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[34, 25, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 30, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 34, 12, 22, 11, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 31, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 1", "variables": {"arr": {"value": "[25, 34, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": true}}}, {"number": 32, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[25, 34, 12, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 33, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 12, 34, 22, 11, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 34, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 2", "variables": {"arr": {"value": "[25, 12, 34, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": true}}}, {"number": 35, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[25, 12, 34, 22, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 36, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 12, 22, 34, 11, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 37, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 3", "variables": {"arr": {"value": "[25, 12, 22, 34, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": true}}}, {"number": 38, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[25, 12, 22, 34, 11, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 39, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 40, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 4", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": true}}}, {"number": 41, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": false}}}, {"number": 42, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "1", "type": "int", "changed": false}, "j": {"value": "4", "type": "int", "changed": false}}}, {"number": 43, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": true}, "j": {"value": "4", "type": "int", "changed": false}}}, {"number": 44, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 0", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": true}}}, {"number": 45, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[25, 12, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 46, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 25, 22, 11, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 47, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 1", "variables": {"arr": {"value": "[12, 25, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": true}}}, {"number": 48, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[12, 25, 22, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 49, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 22, 25, 11, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 50, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 2", "variables": {"arr": {"value": "[12, 22, 25, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": true}}}, {"number": 51, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[12, 22, 25, 11, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 52, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 53, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 3", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": true}}}, {"number": 54, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 55, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "2", "type": "int", "changed": false}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 56, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": true}, "j": {"value": "3", "type": "int", "changed": false}}}, {"number": 57, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 0", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": true}}}, {"number": 58, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 59, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 1", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": true}}}, {"number": 60, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[12, 22, 11, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 61, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 62, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 2", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": true}}}, {"number": 63, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 64, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "3", "type": "int", "changed": false}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 65, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": true}, "j": {"value": "2", "type": "int", "changed": false}}}, {"number": 66, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 0", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": true}}}, {"number": 67, "line": 7, "type": "line", "content": "    return arr", "explanation": "Executing: return arr", "variables": {"arr": {"value": "[12, 11, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 68, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": true}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 69, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 1", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": true}}}, {"number": 70, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 71, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "4", "type": "int", "changed": false}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 72, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "5", "type": "int", "changed": true}, "j": {"value": "1", "type": "int", "changed": false}}}, {"number": 73, "line": 6, "type": "assignment", "content": "                arr[j], arr[j+1] = arr[j+1], arr[j]", "explanation": "Set j to 0", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "5", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": true}}}, {"number": 74, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "5", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 75, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "5", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 76, "line": 5, "type": "condition", "content": "            if arr[j] > arr[j+1]:", "explanation": "Evaluating condition: if arr[j] > arr[j+1]:", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "6", "type": "int", "changed": true}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 77, "line": 4, "type": "loop_start", "content": "        for j in range(0, n-i-1):", "explanation": "Starting loop: for j in range(0, n-i-1):", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "6", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 78, "line": 8, "type": "line", "content": "", "explanation": "Empty line", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "6", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 79, "line": 8, "type": "return", "content": "", "explanation": "Returning: [11, 12, 22, 25, 34, 64, 90]", "variables": {"arr": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}, "n": {"value": "7", "type": "int", "changed": false}, "i": {"value": "6", "type": "int", "changed": false}, "j": {"value": "0", "type": "int", "changed": false}}}, {"number": 80, "line": 12, "type": "line", "content": "", "explanation": "Empty line", "variables": {"numbers": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "sorted_nums": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}}}, {"number": 81, "line": 12, "type": "return", "content": "", "explanation": "Returning from function", "variables": {"numbers": {"value": "[64, 34, 25, 12, 22, 11, 90]", "type": "list", "changed": false}, "sorted_nums": {"value": "[11, 12, 22, 25, 34, 64, 90]", "type": "list", "changed": false}}}];
+        let currentStep = 0;
+        let playing = false;
+        let playInterval = null;
+        
+        function updateDisplay() {
+            const step = steps[currentStep];
+            if (!step) return;
+            
+            // Update step info
+            document.getElementById('stepNum').textContent = step.number;
+            document.getElementById('stepType').textContent = step.type.toUpperCase();
+            document.getElementById('lineInfo').textContent = 'Line ' + step.line + ': ' + step.content.trim();
+            document.getElementById('explanation').textContent = '→ ' + step.explanation;
+            document.getElementById('currentStep').textContent = currentStep + 1;
+            
+            // Highlight current line
+            document.querySelectorAll('.code-line').forEach(el => el.classList.remove('active'));
+            const activeLine = document.querySelector('.code-line[data-line="' + step.line + '"]');
+            if (activeLine) activeLine.classList.add('active');
+            
+            // Update variables
+            const varsList = document.getElementById('variablesList');
+            varsList.innerHTML = '';
+            for (const [name, info] of Object.entries(step.variables)) {
+                const div = document.createElement('div');
+                div.className = 'variable' + (info.changed ? ' changed' : '');
+                div.innerHTML = (info.changed ? '⟳ ' : '&nbsp;&nbsp;') +
+                    '<span class="name">' + name + '</span> = ' +
+                    '<span class="value">' + info.value + '</span> ' +
+                    '<span class="type">(' + info.type + ')</span>';
+                varsList.appendChild(div);
+            }
+            
+            // Update buttons
+            document.getElementById('firstBtn').disabled = currentStep === 0;
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === steps.length - 1;
+            document.getElementById('lastBtn').disabled = currentStep === steps.length - 1;
+        }
+        
+        function goTo(stepIndex) {
+            currentStep = Math.max(0, Math.min(steps.length - 1, stepIndex));
+            updateDisplay();
+        }
+        
+        function togglePlay() {
+            playing = !playing;
+            document.getElementById('playBtn').textContent = playing ? '⏸ Pause' : '▶ Play';
+            
+            if (playing) {
+                playInterval = setInterval(() => {
+                    if (currentStep < steps.length - 1) {
+                        goTo(currentStep + 1);
+                    } else {
+                        togglePlay();
+                    }
+                }, 1500);
+            } else {
+                clearInterval(playInterval);
+            }
+        }
+        
+        document.getElementById('firstBtn').onclick = () => goTo(0);
+        document.getElementById('prevBtn').onclick = () => goTo(currentStep - 1);
+        document.getElementById('nextBtn').onclick = () => goTo(currentStep + 1);
+        document.getElementById('lastBtn').onclick = () => goTo(steps.length - 1);
+        document.getElementById('playBtn').onclick = togglePlay;
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') goTo(currentStep - 1);
+            if (e.key === 'ArrowRight') goTo(currentStep + 1);
+            if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+        });
+        
+        // Initial display
+        document.getElementById('totalSteps').textContent = steps.length;
+        updateDisplay();
+    </script>
+</body>
+</html>

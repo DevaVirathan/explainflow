@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explainflow"
+version = "0.1.0"
+description = "Code Execution Visualizer & Explainer - Generate step-by-step visual explanations of Python code"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "DevaVirathan", email = "devavirathan.mahalingam@gmail.com"}
+]
+keywords = [
+    "education",
+    "visualization",
+    "code-explanation",
+    "debugging",
+    "teaching",
+    "learning",
+    "python-tutor",
+    "step-by-step"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Multimedia :: Graphics :: Presentation"
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pillow>=10.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0"
+]
+video = [
+    "imageio>=2.31.0",
+    "imageio-ffmpeg>=0.4.8"
+]
+cli = [
+    "typer>=0.9.0"
+]
+all = [
+    "explainflow[dev,video,cli]"
+]
+
+[project.urls]
+Homepage = "https://github.com/DevaVirathan/explainflow"
+Documentation = "https://github.com/DevaVirathan/explainflow#readme"
+Repository = "https://github.com/DevaVirathan/explainflow"
+Issues = "https://github.com/DevaVirathan/explainflow/issues"
+
+[project.scripts]
+explainflow = "explainflow.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I", "N", "D", "UP"]
+ignore = ["D100", "D104"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
