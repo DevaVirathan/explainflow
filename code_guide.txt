@@ -1,0 +1,119 @@
+How to Publish Updates to PyPI
+Here's the complete step-by-step process for publishing updates to your library:
+
+🔄 Update Workflow (Every Time You Make Changes)
+Step 1: Make Your Code Changes
+Edit your source files in explainflow
+
+Step 2: Update the Version Number ⚠️ IMPORTANT
+You MUST increment the version number in pyproject.toml before each release. PyPI doesn't allow uploading the same version twice.
+
+# In pyproject.toml, change:
+version = "0.1.0"  # Current version
+
+# To one of these (follow Semantic Versioning):
+version = "0.1.1"  # Bug fixes (patch)
+version = "0.2.0"  # New features (minor)
+version = "1.0.0"  # Breaking changes (major)
+
+Semantic Versioning Guide:
+
+Change Type	Example	When to Use
+0.1.0 → 0.1.1	Patch	Bug fixes, small improvements
+0.1.0 → 0.2.0	Minor	New features, backward compatible
+0.1.0 → 1.0.0	Major	Breaking changes, API changes
+Step 3: Update __init__.py Version (Optional but Recommended)
+Keep the version in sync:
+
+# In src/explainflow/__init__.py
+__version__ = "0.1.1"  # Match pyproject.toml
+
+Step 4: Test Your Changes Locally
+
+cd /home/deva/Documents/explainflow
+source .venv/bin/activate.fish
+
+# Run tests
+pytest
+
+# Test the library manually
+python -c "from explainflow import explain; explain('x=1')"
+
+Step 5: Clean Old Build Files
+
+rm -rf dist/ build/ src/*.egg-info
+
+
+Step 6: Build New Package
+
+python -m build
+
+Step 7: Upload to PyPI
+
+twine upload dist/*
+
+Step 8: Commit, Tag, and Push to GitHub
+
+# Commit changes
+git add .
+git commit -m "Release v0.1.1 - description of changes"
+git push
+
+# Create and push tag
+git tag -a v0.1.1 -m "Release v0.1.1"
+git push origin v0.1.1
+
+Step 9: Create GitHub Release (Optional)
+Go to: https://github.com/DevaVirathan/explainflow/releases/new
+
+📋 Quick Reference Commands
+Here's a one-liner you can use for future releases:
+
+# Replace X.X.X with your new version
+cd /home/deva/Documents/explainflow && \
+source .venv/bin/activate.fish && \
+rm -rf dist/ build/ src/*.egg-info && \
+python -m build && \
+twine upload dist/*
+
+📝 Complete Checklist
+
+□ 1. Make code changes
+□ 2. Update version in pyproject.toml
+□ 3. Update version in __init__.py (optional)
+□ 4. Run tests: pytest
+□ 5. Clean: rm -rf dist/ build/ src/*.egg-info
+□ 6. Build: python -m build
+□ 7. Upload: twine upload dist/*
+□ 8. Git commit and push
+□ 9. Create git tag: git tag -a vX.X.X -m "Release vX.X.X"
+□ 10. Push tag: git push origin vX.X.X
+□ 11. Create GitHub Release (optional)
+
+⚠️ Common Mistakes to Avoid
+
+Mistake	Solution
+Forgot to update version	Always increment version before twine upload
+Old files in dist	Always run rm -rf dist/ before building
+Tests failing	Run pytest before publishing
+Token expired	Generate new token at https://pypi.org/manage/account/token/
+
+🔧 Example: Publishing a Bug Fix
+
+# 1. Edit pyproject.toml: change version = "0.1.0" to version = "0.1.1"
+
+# 2. Run this:
+cd /home/deva/Documents/explainflow
+source .venv/bin/activate.fish
+rm -rf dist/ build/ src/*.egg-info
+python -m build
+twine upload dist/*
+
+# 3. Commit and tag
+git add .
+git commit -m "fix: resolve issue with loop tracing"
+git push
+git tag -a v0.1.1 -m "v0.1.1 - Bug fix release"
+git push origin v0.1.1
+
+
