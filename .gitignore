@@ -56,3 +56,4 @@ examples/*.html
 # OS files
 .DS_Store
 Thumbs.db
+code_guide.txt

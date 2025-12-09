@@ -5,7 +5,7 @@ Generate step-by-step visual explanations of Python code execution.
 """
 
 __version__ = "0.1.0"
-__author__ = "Your Name"
+__author__ = "DevaVirathan"
 
 from explainflow.models import ExecutionTrace, ExecutionStep, StepType, Variable
 from explainflow.core import explain, explain_function
