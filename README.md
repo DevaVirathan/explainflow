@@ -21,6 +21,8 @@
 
 ## 🚀 Installation
 
+### Standard Installation
+
 ```bash
 pip install explainflow
 ```
@@ -38,6 +40,53 @@ pip install explainflow[cli]
 Install everything:
 ```bash
 pip install explainflow[all]
+```
+
+### ⚠️ Windows Installation (Python 3.12+)
+
+If you encounter the error:
+```
+Fatal error in launcher: Unable to create process using '"C:\...\python.exe" "C:\...\pip.exe"'
+```
+
+**Use this command instead:**
+```powershell
+python -m pip install explainflow
+```
+
+<details>
+<summary><b>Why does this happen?</b></summary>
+
+This is a known Windows pip launcher issue (not specific to explainflow) that occurs when:
+- Python is installed in a path with spaces (e.g., `C:\Program Files`)
+- The pip.exe launcher has a stale or corrupted Python path reference
+- Multiple Python versions are installed
+
+**Permanent fixes:**
+1. **Recommended**: Always use `python -m pip install <package>` on Windows
+2. **Repair pip**: `python -m pip install --upgrade --force-reinstall pip`
+3. **Use virtual environments**: Create a venv in a path without spaces
+4. **Reinstall Python**: Install to a simple path like `C:\Python312`
+
+</details>
+
+### Virtual Environment (Recommended)
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate (Windows PowerShell)
+.\venv\Scripts\Activate.ps1
+
+# Activate (Windows CMD)
+.\venv\Scripts\activate.bat
+
+# Activate (Linux/macOS)
+source venv/bin/activate
+
+# Install explainflow
+pip install explainflow
 ```
 
 ## 📖 Quick Start
@@ -192,6 +241,41 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔧 Troubleshooting
+
+### Windows: "Fatal error in launcher" when using pip
+
+If you see this error on Windows:
+```
+Fatal error in launcher: Unable to create process using '"..."'
+```
+
+**Quick Fix** - Use `python -m pip` instead of `pip`:
+```powershell
+python -m pip install explainflow
+```
+
+**Permanent Fix** - Repair your pip installation:
+```powershell
+python -m pip install --upgrade --force-reinstall pip
+```
+
+This is a Windows-specific issue with the pip launcher, not a problem with explainflow. See [pip issue discussion](https://stackoverflow.com/q/24627525) for more details.
+
+### Import errors after installation
+
+Make sure you're using the same Python environment where you installed explainflow:
+```bash
+python -c "import explainflow; print(explainflow.__version__)"
+```
+
+### GIF/Video export not working
+
+Install the video dependencies:
+```bash
+python -m pip install explainflow[video]
+```
 
 ## 🙏 Acknowledgments
 
