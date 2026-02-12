@@ -6,7 +6,7 @@ Thank you for your interest in contributing to ExplainFlow! 🎉
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/explainflow.git
+git clone https://github.com/DevaVirathan/explainflow.git
 cd explainflow
 ```
 
