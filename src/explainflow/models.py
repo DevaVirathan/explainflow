@@ -289,4 +289,7 @@ class ExecutionTrace:
         """IPython/Jupyter display integration."""
         from explainflow.exporter import export_html
 
-        return export_html(self, return_string=True)
+        result = export_html(self, return_string=True)
+        # When return_string=True, export_html returns str
+        assert isinstance(result, str)
+        return result

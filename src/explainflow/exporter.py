@@ -6,10 +6,16 @@ Handles exporting execution traces to images, GIFs, videos, and HTML.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
+    from PIL.ImageFont import FreeTypeFont
+    from PIL.ImageFont import ImageFont as ImageFontModule
+
     from explainflow.core import ExecutionTrace
+
+    # Type alias for fonts
+    FontType = Union[FreeTypeFont, ImageFontModule]
 
 
 # Constants for image rendering
@@ -78,6 +84,10 @@ def export_image(
     draw = ImageDraw.Draw(img)
 
     # Try to load a monospace font, fall back to default
+    code_font: FontType
+    font: FontType
+    header_font: FontType
+
     try:
         code_font = ImageFont.truetype(
             "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", CODE_FONT_SIZE
@@ -223,7 +233,7 @@ def _draw_step_info(
     draw.text(
         (PADDING, y_offset), f"→ {step.explanation}", fill=colors["success"], font=font
     )
-    y_offset += LINE_HEIGHT * 1.5
+    y_offset += int(LINE_HEIGHT * 1.5)
 
     # Variables
     if step.variables:
@@ -441,9 +451,9 @@ def export_markdown(
             for var in step.variables.values():
                 changed = "⟳" if var.changed else ""
                 type_info = var.type_name if show_types else ""
-                oid = str(var.object_id) if var.object_id else ""
+                obj_id_str = str(var.object_id) if var.object_id else ""
                 lines.append(
-                    f"| `{var.name}` | `{var.repr_value}` | {type_info} | {changed} | {oid} |"
+                    f"| `{var.name}` | `{var.repr_value}` | {type_info} | {changed} | {obj_id_str} |"
                 )
             lines.append("")
 
@@ -462,9 +472,9 @@ def export_markdown(
             lines.append("| Object ID | Type | Value | Refs |")
             lines.append("|-----------|------|-------|------|")
             for oid, obj in step.heap_objects.items():
-                refs = len(obj.children) if obj.children else 0
+                ref_count: int = len(obj.children) if obj.children else 0
                 lines.append(
-                    f"| @{oid} | {obj.type_name} | `{obj.repr_value[:60]}` | {refs} |"
+                    f"| @{oid} | {obj.type_name} | `{obj.repr_value[:60]}` | {ref_count} |"
                 )
             lines.append("")
 
@@ -905,6 +915,9 @@ def export_html(
 
     if return_string:
         return html_content
+
+    if filename is None:
+        raise ValueError("filename is required when return_string=False")
 
     output_path = Path(filename)
     output_path.write_text(html_content)

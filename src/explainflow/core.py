@@ -49,7 +49,7 @@ def explain(
     """
     tracer = Tracer(
         max_steps=max_steps,
-        breakpoints=breakpoints,
+        breakpoints=set(breakpoints) if breakpoints else None,
         track_heap=track_heap,
         track_call_stack=track_call_stack,
         profile=profile,

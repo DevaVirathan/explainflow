@@ -543,7 +543,7 @@ def trace(func: Callable | None = None, *, output: str = "rich", max_steps: int 
                 return trace_result.final_variables["result"].value
             return None
 
-        wrapper.__explainflow_traced__ = True
+        wrapper.__explainflow_traced__ = True  # type: ignore[attr-defined]
         return wrapper
 
     if func is not None:

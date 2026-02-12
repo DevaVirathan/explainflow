@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Literal
+
+OutputMode = Literal["rich", "simple", "silent"]
 
 
 def main():
@@ -74,6 +77,7 @@ def main():
 
         code = file.read_text()
 
+        output_mode: OutputMode
         if quiet:
             output_mode = "silent"
         elif simple:
