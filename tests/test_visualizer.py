@@ -4,6 +4,7 @@ import sys
 from io import StringIO
 
 import pytest
+
 from explainflow import explain
 from explainflow.visualizer import THEMES, Visualizer
 

@@ -255,9 +255,7 @@ class Visualizer:
             content.append_text(heap_text)
 
         step_label = step.step_type.value.upper()
-        title = (
-            f"[bold]Step {step.step_number}[/bold]" f" [{color}]{step_label}[/{color}]"
-        )
+        title = f"[bold]Step {step.step_number}[/bold] [{color}]{step_label}[/{color}]"
         panel = Panel(
             content,
             title=title,
@@ -307,11 +305,11 @@ class Visualizer:
 
         if trace.success:
             console.print(
-                "\n[bold green]✓ Execution completed" " successfully[/bold green]",
+                "\n[bold green]✓ Execution completed successfully[/bold green]",
             )
         else:
             console.print(
-                f"\n[bold red]✗ Execution failed:" f" {trace.error_message}[/bold red]",
+                f"\n[bold red]✗ Execution failed: {trace.error_message}[/bold red]",
             )
 
         console.print(f"[dim]Total steps: {len(trace.steps)}[/dim]\n")
@@ -368,7 +366,7 @@ class Visualizer:
             for obj in step.heap_objects.values():
                 children = f" [{len(obj.children)} refs]" if obj.children else ""
                 val = _truncate(obj.repr_value, 50)
-                print(f"    📦 {obj.type_name}" f" @{obj.object_id} = {val}{children}")
+                print(f"    📦 {obj.type_name} @{obj.object_id} = {val}{children}")
 
     def _display_summary_simple(self, trace: ExecutionTrace) -> None:
         print("\n" + "=" * 60)
@@ -458,7 +456,7 @@ def _format_rich_value(repr_value: str, type_name: str) -> str:
         try:
             items = repr_value.strip("[]").split(", ")
             if len(items) > 8:
-                return f"[{', '.join(items[:6])}, ... +{len(items)-6} more]"
+                return f"[{', '.join(items[:6])}, ... +{len(items) - 6} more]"
         except Exception:
             pass
     elif type_name == "dict" and repr_value.startswith("{"):

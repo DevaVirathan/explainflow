@@ -723,7 +723,7 @@ def export_html(
         <div class="main">
             <div class="code-panel">
                 <h3 style="margin-bottom: 15px;">Source Code</h3>
-                {''.join(code_lines_html)}
+                {"".join(code_lines_html)}
             </div>
 
             <div class="info-panel">

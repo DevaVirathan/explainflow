@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from explainflow import explain
 from explainflow.exporter import export_gif, export_html, export_image
 
