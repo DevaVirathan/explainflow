@@ -1,8 +1,4 @@
-"""
-Pytest configuration for ExplainFlow tests.
-"""
-
-import pytest
+"""Pytest configuration for ExplainFlow tests."""
 
 
 def pytest_configure(config):
