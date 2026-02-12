@@ -1,20 +1,19 @@
-"""
-Data models for ExplainFlow.
+"""Data models for ExplainFlow.
 
 Contains data structures for execution traces.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Optional
-from enum import Enum
 import copy
-import time
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
 
 class StepType(Enum):
     """Types of execution steps."""
+
     LINE = "line"
     CALL = "call"
     RETURN = "return"
@@ -34,6 +33,7 @@ class StepType(Enum):
 @dataclass
 class HeapObject:
     """Represents an object on the heap with its identity."""
+
     object_id: int
     type_name: str
     repr_value: str
@@ -42,7 +42,7 @@ class HeapObject:
     children: dict[str, int] = field(default_factory=dict)  # attr/key -> object_id
 
     @classmethod
-    def from_value(cls, value: Any) -> "HeapObject":
+    def from_value(cls, value: Any) -> HeapObject:
         """Create a HeapObject from a value."""
         obj_id = id(value)
         type_name = type(value).__name__
@@ -65,9 +65,9 @@ class HeapObject:
             elif isinstance(value, set):
                 for i, v in enumerate(value):
                     children[str(i)] = id(v)
-            elif hasattr(value, '__dict__') and not isinstance(value, type):
+            elif hasattr(value, "__dict__") and not isinstance(value, type):
                 for k, v in value.__dict__.items():
-                    if not k.startswith('__'):
+                    if not k.startswith("__"):
                         children[k] = id(v)
         except Exception:
             pass
@@ -84,25 +84,27 @@ class HeapObject:
 @dataclass
 class StackFrame:
     """Represents a call stack frame."""
+
     function_name: str
     line_number: int
     local_variables: dict[str, Variable] = field(default_factory=dict)
     arguments: dict[str, str] = field(default_factory=dict)
-    return_value: Optional[str] = None
+    return_value: str | None = None
 
 
 @dataclass
 class Variable:
     """Represents a variable at a point in time."""
+
     name: str
     value: Any
     type_name: str
     repr_value: str
     changed: bool = False
-    object_id: Optional[int] = None
+    object_id: int | None = None
 
     @classmethod
-    def from_value(cls, name: str, value: Any, previous_value: Any = None) -> "Variable":
+    def from_value(cls, name: str, value: Any, previous_value: Any = None) -> Variable:
         """Create a Variable from a name and value."""
         try:
             repr_val = repr(value)
@@ -116,8 +118,11 @@ class Variable:
         if previous_value is not None:
             try:
                 changed = previous_value != value
-                # Handle numpy-like objects that return arrays from comparison
-                if hasattr(changed, '__iter__') and not isinstance(changed, (str, bytes)):
+                # Handle numpy-like objects that return arrays
+                if hasattr(changed, "__iter__") and not isinstance(
+                    changed,
+                    (str, bytes),
+                ):
                     changed = True
             except Exception:
                 # If comparison fails, assume changed
@@ -145,21 +150,22 @@ def _is_copyable(value: Any) -> bool:
 @dataclass
 class ExecutionStep:
     """Represents a single step in code execution."""
+
     step_number: int
     line_number: int
     line_content: str
     step_type: StepType
     variables: dict[str, Variable] = field(default_factory=dict)
     output: str = ""
-    return_value: Optional[Any] = None
-    exception: Optional[Exception] = None
-    function_name: Optional[str] = None
+    return_value: Any | None = None
+    exception: Exception | None = None
+    function_name: str | None = None
     call_depth: int = 0
     explanation: str = ""
     # Enhanced fields
     heap_objects: dict[int, HeapObject] = field(default_factory=dict)
     call_stack: list[StackFrame] = field(default_factory=list)
-    loop_iteration: Optional[int] = None
+    loop_iteration: int | None = None
     timestamp: float = 0.0
     duration_ms: float = 0.0
 
@@ -197,6 +203,7 @@ class ExecutionStep:
 @dataclass
 class ExecutionTrace:
     """Complete trace of code execution."""
+
     code: str
     steps: list[ExecutionStep] = field(default_factory=list)
     final_output: str = ""
@@ -214,7 +221,7 @@ class ExecutionTrace:
     def __getitem__(self, index: int) -> ExecutionStep:
         return self.steps[index]
 
-    def get_step(self, step_number: int) -> Optional[ExecutionStep]:
+    def get_step(self, step_number: int) -> ExecutionStep | None:
         """Get a specific step by number."""
         for step in self.steps:
             if step.step_number == step_number:
@@ -258,8 +265,8 @@ class ExecutionTrace:
     def summary(self) -> str:
         """Get a summary of the execution."""
         lines = [
-            f"Execution Summary",
-            f"=" * 40,
+            "Execution Summary",
+            "=" * 40,
             f"Total steps: {len(self.steps)}",
             f"Lines in code: {self.total_lines}",
             f"Success: {self.success}",
@@ -272,7 +279,7 @@ class ExecutionTrace:
             lines.append(f"\nError: {self.error_message}")
 
         if self.final_variables:
-            lines.append(f"\nFinal Variables:")
+            lines.append("\nFinal Variables:")
             for var in self.final_variables.values():
                 lines.append(f"  {var.name} = {var.repr_value} ({var.type_name})")
 
@@ -281,4 +288,5 @@ class ExecutionTrace:
     def _repr_html_(self) -> str:
         """IPython/Jupyter display integration."""
         from explainflow.exporter import export_html
+
         return export_html(self, return_string=True)

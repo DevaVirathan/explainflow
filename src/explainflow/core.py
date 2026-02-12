@@ -1,16 +1,14 @@
-"""
-Core module for ExplainFlow.
+"""Core module for ExplainFlow.
 
 Contains the main explain() function.
 """
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal
 
 from explainflow.models import ExecutionTrace
 from explainflow.tracer import Tracer
-
 
 OutputMode = Literal["rich", "simple", "silent"]
 
@@ -21,13 +19,12 @@ def explain(
     max_steps: int = 1000,
     show_types: bool = True,
     theme: str = "dark",
-    breakpoints: Optional[list[int]] = None,
+    breakpoints: list[int] | None = None,
     track_heap: bool = False,
     track_call_stack: bool = True,
     profile: bool = False,
 ) -> ExecutionTrace:
-    """
-    Execute and explain code step-by-step.
+    """Execute and explain code step-by-step.
 
     Args:
         code: Python code string to explain
@@ -61,6 +58,7 @@ def explain(
 
     if output != "silent":
         from explainflow.visualizer import Visualizer
+
         visualizer = Visualizer(theme=theme, show_types=show_types)
         if output == "rich":
             visualizer.display_rich(trace_result)
@@ -71,8 +69,7 @@ def explain(
 
 
 def explain_function(func, *args, **kwargs) -> ExecutionTrace:
-    """
-    Explain a function execution with given arguments.
+    """Explain a function execution with given arguments.
 
     Args:
         func: Function to trace

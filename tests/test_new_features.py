@@ -1,42 +1,37 @@
-"""
-Tests for ExplainFlow v1.0.0 new features.
+"""Tests for ExplainFlow v1.0.0 new features.
 
 Covers: HeapObject, StackFrame, breakpoints, heap tracking, call stack,
 loop iteration, profiling, multi-file tracing, custom themes, enhanced models,
 export_video, export_markdown, enhanced HTML export, and enhanced core API.
 """
 
-import pytest
-import os
-import tempfile
 from pathlib import Path
 
+from explainflow.core import explain
+from explainflow.exporter import export_html, export_markdown
 from explainflow.models import (
-    HeapObject,
-    StackFrame,
-    Variable,
     ExecutionStep,
     ExecutionTrace,
+    HeapObject,
+    StackFrame,
     StepType,
+    Variable,
 )
 from explainflow.tracer import Tracer
 from explainflow.visualizer import (
-    Visualizer,
-    register_theme,
-    get_theme,
     THEMES,
+    Visualizer,
     format_value,
+    get_theme,
+    register_theme,
 )
-from explainflow.core import explain
-from explainflow.exporter import export_html, export_markdown
-
 
 # ==============================================================
 # Models: HeapObject
 # ==============================================================
 
-class TestHeapObject:
 
+class TestHeapObject:
     def test_from_value_int(self):
         obj = HeapObject.from_value(42)
         assert obj.type_name == "int"
@@ -72,8 +67,8 @@ class TestHeapObject:
 # Models: StackFrame
 # ==============================================================
 
-class TestStackFrame:
 
+class TestStackFrame:
     def test_creation(self):
         sf = StackFrame(
             function_name="my_func",
@@ -97,8 +92,8 @@ class TestStackFrame:
 # Models: Enhanced Variable
 # ==============================================================
 
-class TestVariableEnhanced:
 
+class TestVariableEnhanced:
     def test_object_id_tracked(self):
         data = [1, 2, 3]
         var = Variable.from_value("data", data)
@@ -113,8 +108,8 @@ class TestVariableEnhanced:
 # Models: Enhanced ExecutionStep
 # ==============================================================
 
-class TestExecutionStepEnhanced:
 
+class TestExecutionStepEnhanced:
     def test_new_fields_default(self):
         step = ExecutionStep(
             step_number=1,
@@ -147,8 +142,8 @@ class TestExecutionStepEnhanced:
 # Models: Enhanced ExecutionTrace
 # ==============================================================
 
-class TestExecutionTraceEnhanced:
 
+class TestExecutionTraceEnhanced:
     def test_repr_html(self):
         """Test Jupyter _repr_html_ integration."""
         trace = ExecutionTrace(code="x = 1", steps=[], success=True)
@@ -170,8 +165,8 @@ class TestExecutionTraceEnhanced:
 # Models: New StepTypes
 # ==============================================================
 
-class TestNewStepTypes:
 
+class TestNewStepTypes:
     def test_context_enter(self):
         assert StepType.CONTEXT_ENTER.value == "context_enter"
 
@@ -192,8 +187,8 @@ class TestNewStepTypes:
 # Tracer: Breakpoints
 # ==============================================================
 
-class TestBreakpoints:
 
+class TestBreakpoints:
     def test_breakpoints_parameter(self):
         tracer = Tracer(breakpoints=[2, 3])
         result = tracer.trace("x = 1\ny = 2\nz = 3")
@@ -209,8 +204,8 @@ class TestBreakpoints:
 # Tracer: Heap tracking
 # ==============================================================
 
-class TestHeapTracking:
 
+class TestHeapTracking:
     def test_heap_tracking_enabled(self):
         tracer = Tracer(track_heap=True)
         result = tracer.trace("data = [1, 2, 3]\ndata.append(4)")
@@ -229,8 +224,8 @@ class TestHeapTracking:
 # Tracer: Call stack tracking
 # ==============================================================
 
-class TestCallStackTracking:
 
+class TestCallStackTracking:
     def test_call_stack_with_function(self):
         tracer = Tracer(track_call_stack=True)
         code = """
@@ -253,8 +248,8 @@ result = add(1, 2)
 # Tracer: Profiling
 # ==============================================================
 
-class TestProfiling:
 
+class TestProfiling:
     def test_profile_enabled(self):
         tracer = Tracer(profile=True)
         result = tracer.trace("x = sum(range(100))")
@@ -272,8 +267,8 @@ class TestProfiling:
 # Tracer: Loop iteration
 # ==============================================================
 
-class TestLoopIteration:
 
+class TestLoopIteration:
     def test_loop_iteration_counted(self):
         tracer = Tracer()
         code = "total = 0\nfor i in range(3):\n    total += i"
@@ -286,8 +281,8 @@ class TestLoopIteration:
 # Visualizer: Custom themes
 # ==============================================================
 
-class TestCustomThemes:
 
+class TestCustomThemes:
     def test_register_theme(self):
         register_theme("my_custom", {"background": "#000000"})
         theme = get_theme("my_custom")
@@ -313,8 +308,8 @@ class TestCustomThemes:
 # Visualizer: format_value
 # ==============================================================
 
-class TestFormatValue:
 
+class TestFormatValue:
     def test_short_value(self):
         assert format_value("hello") == "hello"
 
@@ -329,8 +324,8 @@ class TestFormatValue:
 # Visualizer: to_frames enhanced
 # ==============================================================
 
-class TestToFramesEnhanced:
 
+class TestToFramesEnhanced:
     def test_frames_include_call_stack(self):
         tracer = Tracer(track_call_stack=True)
         code = "def f():\n    return 1\nresult = f()"
@@ -359,8 +354,8 @@ class TestToFramesEnhanced:
 # Core: Enhanced explain()
 # ==============================================================
 
-class TestExplainEnhanced:
 
+class TestExplainEnhanced:
     def test_explain_with_heap(self):
         trace = explain("x = [1, 2]", output="silent", track_heap=True)
         assert trace.success
@@ -383,8 +378,8 @@ class TestExplainEnhanced:
 # Exporter: export_html return_string
 # ==============================================================
 
-class TestExportHtmlReturnString:
 
+class TestExportHtmlReturnString:
     def test_return_string(self):
         tracer = Tracer()
         result = tracer.trace("x = 42")
@@ -418,8 +413,8 @@ class TestExportHtmlReturnString:
 # Exporter: export_markdown enhanced
 # ==============================================================
 
-class TestExportMarkdownEnhanced:
 
+class TestExportMarkdownEnhanced:
     def test_markdown_basic(self, tmp_path):
         tracer = Tracer()
         result = tracer.trace("x = 42")
@@ -443,10 +438,11 @@ class TestExportMarkdownEnhanced:
 # Version
 # ==============================================================
 
-class TestVersion:
 
+class TestVersion:
     def test_version_is_1_0_0(self):
         from explainflow import __version__
+
         assert __version__ == "1.0.0"
 
 
@@ -454,28 +450,34 @@ class TestVersion:
 # All new public exports
 # ==============================================================
 
-class TestPublicExports:
 
+class TestPublicExports:
     def test_heap_object_importable(self):
         from explainflow import HeapObject
+
         assert HeapObject is not None
 
     def test_stack_frame_importable(self):
         from explainflow import StackFrame
+
         assert StackFrame is not None
 
     def test_register_theme_importable(self):
         from explainflow import register_theme
+
         assert callable(register_theme)
 
     def test_get_theme_importable(self):
         from explainflow import get_theme
+
         assert callable(get_theme)
 
     def test_export_video_importable(self):
         from explainflow import export_video
+
         assert callable(export_video)
 
     def test_export_markdown_importable(self):
         from explainflow import export_markdown
+
         assert callable(export_markdown)

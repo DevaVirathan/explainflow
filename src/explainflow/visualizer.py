@@ -1,5 +1,4 @@
-"""
-Visualizer module for ExplainFlow.
+"""Visualizer module for ExplainFlow.
 
 Handles displaying execution traces in various formats.
 Supports: call stack display, heap/memory diagrams, data structure
@@ -11,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from explainflow.models import ExecutionTrace, ExecutionStep
+    from explainflow.models import ExecutionStep, ExecutionTrace
 
 # Built-in theme definitions
 THEMES: dict[str, dict[str, str]] = {
@@ -76,8 +75,7 @@ _custom_themes: dict[str, dict[str, str]] = {}
 
 
 def register_theme(name: str, colors: dict[str, str]) -> None:
-    """
-    Register a custom color theme.
+    """Register a custom color theme.
 
     Args:
         name: Theme name
@@ -102,9 +100,7 @@ def get_theme(name: str) -> dict[str, str]:
 
 
 class Visualizer:
-    """
-    Visualizes execution traces in the terminal or as data for export.
-    """
+    """Visualizes execution traces in the terminal or as data for export."""
 
     def __init__(self, theme: str = "dark", show_types: bool = True):
         self.theme_name = theme
@@ -115,17 +111,12 @@ class Visualizer:
     # Rich display
     # ------------------------------------------------------------------
 
-    def display_rich(self, trace: "ExecutionTrace") -> None:
+    def display_rich(self, trace: ExecutionTrace) -> None:
         """Display trace using Rich library for beautiful terminal output."""
         try:
             from rich.console import Console
             from rich.panel import Panel
-            from rich.table import Table
             from rich.syntax import Syntax
-            from rich.text import Text
-            from rich.columns import Columns
-            from rich.tree import Tree
-            from rich import box
         except ImportError:
             print("Rich library not installed. Using simple output.")
             self.display_simple(trace)
@@ -135,18 +126,22 @@ class Visualizer:
 
         # Title
         console.print()
-        console.print(Panel.fit(
-            "[bold blue]ExplainFlow[/bold blue] - Code Execution Trace",
-            border_style="blue"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]ExplainFlow[/bold blue] - Code Execution Trace",
+                border_style="blue",
+            )
+        )
         console.print()
 
         # Source code
-        console.print(Panel(
-            Syntax(trace.code, "python", theme="monokai", line_numbers=True),
-            title="[bold]Source Code[/bold]",
-            border_style="dim"
-        ))
+        console.print(
+            Panel(
+                Syntax(trace.code, "python", theme="monokai", line_numbers=True),
+                title="[bold]Source Code[/bold]",
+                border_style="dim",
+            )
+        )
         console.print()
 
         # Steps
@@ -156,11 +151,15 @@ class Visualizer:
         # Summary
         self._display_summary_rich(console, trace)
 
-    def _display_step_rich(self, console, step: "ExecutionStep", trace: "ExecutionTrace") -> None:
+    def _display_step_rich(
+        self,
+        console,
+        step: ExecutionStep,
+        trace: ExecutionTrace,
+    ) -> None:
+        from rich import box
         from rich.panel import Panel
         from rich.text import Text
-        from rich.tree import Tree
-        from rich import box
 
         step_type_colors = {
             "line": "white",
@@ -213,7 +212,11 @@ class Visualizer:
                 var_text.append(var.name, style="cyan")
                 var_text.append(" = ", style="dim")
                 # Enhanced data structure display
-                var_text.append(_format_rich_value(var.repr_value, var.type_name), style="green")
+                formatted = _format_rich_value(
+                    var.repr_value,
+                    var.type_name,
+                )
+                var_text.append(formatted, style="green")
                 if self.show_types:
                     var_text.append(f" ({var.type_name})", style="dim italic")
                 if var.object_id is not None:
@@ -242,7 +245,7 @@ class Visualizer:
             heap_text = Text()
             heap_text.append("Heap Objects:\n", style="dim")
             for obj in step.heap_objects.values():
-                heap_text.append(f"  📦 ", style="yellow")
+                heap_text.append("  📦 ", style="yellow")
                 heap_text.append(f"{obj.type_name}", style="bold")
                 heap_text.append(f" @{obj.object_id}", style="dim")
                 heap_text.append(f" = {_truncate(obj.repr_value, 60)}", style="green")
@@ -251,27 +254,33 @@ class Visualizer:
                 heap_text.append("\n")
             content.append_text(heap_text)
 
+        step_label = step.step_type.value.upper()
+        title = (
+            f"[bold]Step {step.step_number}[/bold]" f" [{color}]{step_label}[/{color}]"
+        )
         panel = Panel(
             content,
-            title=f"[bold]Step {step.step_number}[/bold] [{color}]{step.step_type.value.upper()}[/{color}]",
+            title=title,
             border_style=color,
             box=box.ROUNDED,
         )
         console.print(panel)
 
-    def _display_summary_rich(self, console, trace: "ExecutionTrace") -> None:
+    def _display_summary_rich(self, console, trace: ExecutionTrace) -> None:
+        from rich import box
         from rich.panel import Panel
         from rich.table import Table
-        from rich import box
 
         console.print()
 
         if trace.final_output:
-            console.print(Panel(
-                trace.final_output.rstrip(),
-                title="[bold]Program Output[/bold]",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    trace.final_output.rstrip(),
+                    title="[bold]Program Output[/bold]",
+                    border_style="green",
+                )
+            )
 
         if trace.final_variables:
             table = Table(title="Final Variables", box=box.SIMPLE)
@@ -281,7 +290,9 @@ class Visualizer:
             table.add_column("Object ID", style="dim")
             for var in trace.final_variables.values():
                 table.add_row(
-                    var.name, var.repr_value, var.type_name,
+                    var.name,
+                    var.repr_value,
+                    var.type_name,
                     str(var.object_id) if var.object_id else "",
                 )
             console.print(table)
@@ -295,9 +306,13 @@ class Visualizer:
                     console.print(f"  @{oid} ← {', '.join(names)}")
 
         if trace.success:
-            console.print(f"\n[bold green]✓ Execution completed successfully[/bold green]")
+            console.print(
+                "\n[bold green]✓ Execution completed" " successfully[/bold green]",
+            )
         else:
-            console.print(f"\n[bold red]✗ Execution failed: {trace.error_message}[/bold red]")
+            console.print(
+                f"\n[bold red]✗ Execution failed:" f" {trace.error_message}[/bold red]",
+            )
 
         console.print(f"[dim]Total steps: {len(trace.steps)}[/dim]\n")
 
@@ -305,14 +320,15 @@ class Visualizer:
     # Simple display
     # ------------------------------------------------------------------
 
-    def display_simple(self, trace: "ExecutionTrace") -> None:
+    def display_simple(self, trace: ExecutionTrace) -> None:
+        """Display trace using plain-text output (no Rich dependency)."""
         print("\n" + "=" * 60)
         print("ExplainFlow - Code Execution Trace")
         print("=" * 60)
 
         print("\nSource Code:")
         print("-" * 40)
-        for i, line in enumerate(trace.code.split('\n'), 1):
+        for i, line in enumerate(trace.code.split("\n"), 1):
             print(f"{i:3} | {line}")
         print("-" * 40)
         print()
@@ -322,7 +338,7 @@ class Visualizer:
 
         self._display_summary_simple(trace)
 
-    def _display_step_simple(self, step: "ExecutionStep") -> None:
+    def _display_step_simple(self, step: ExecutionStep) -> None:
         header = f"\n[Step {step.step_number}] {step.step_type.value.upper()}"
         if step.loop_iteration is not None:
             header += f" (iter {step.loop_iteration})"
@@ -351,9 +367,10 @@ class Visualizer:
             print("  Heap:")
             for obj in step.heap_objects.values():
                 children = f" [{len(obj.children)} refs]" if obj.children else ""
-                print(f"    📦 {obj.type_name} @{obj.object_id} = {_truncate(obj.repr_value, 50)}{children}")
+                val = _truncate(obj.repr_value, 50)
+                print(f"    📦 {obj.type_name}" f" @{obj.object_id} = {val}{children}")
 
-    def _display_summary_simple(self, trace: "ExecutionTrace") -> None:
+    def _display_summary_simple(self, trace: ExecutionTrace) -> None:
         print("\n" + "=" * 60)
 
         if trace.final_output:
@@ -380,7 +397,8 @@ class Visualizer:
     # Frame data for export
     # ------------------------------------------------------------------
 
-    def to_frames(self, trace: "ExecutionTrace") -> list[dict]:
+    def to_frames(self, trace: ExecutionTrace) -> list[dict]:
+        """Convert execution trace steps into serializable frame dicts."""
         frames = []
         for step in trace.steps:
             frame: dict[str, Any] = {
@@ -398,7 +416,7 @@ class Visualizer:
                     }
                     for name, var in step.variables.items()
                 },
-                "code_lines": trace.code.split('\n'),
+                "code_lines": trace.code.split("\n"),
                 "theme": self.theme,
                 "call_stack": [
                     {
@@ -427,9 +445,10 @@ class Visualizer:
 # Helpers
 # ------------------------------------------------------------------
 
+
 def _truncate(value: str, max_length: int = 50) -> str:
     if len(value) > max_length:
-        return value[:max_length - 3] + "..."
+        return value[: max_length - 3] + "..."
     return value
 
 

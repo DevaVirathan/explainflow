@@ -82,8 +82,24 @@ target-version = ["py39", "py310", "py311", "py312"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "D", "UP"]
-ignore = ["D100", "D104"]
+ignore = [
+    "D100",   # Missing docstring in public module
+    "D104",   # Missing docstring in public package
+    "D203",   # 1 blank line before class (conflicts with D211)
+    "D213",   # Multi-line summary second line (conflicts with D212)
+    "D407",   # Missing dashed underline after section
+    "D413",   # Missing blank line after last section
+    "D105",   # Missing docstring in magic method
+    "D107",   # Missing docstring in __init__
+    "D401",   # First line should be in imperative mood
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D101", "D102", "D103", "E501"]
+"src/explainflow/exporter.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.9"

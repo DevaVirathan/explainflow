@@ -1,5 +1,4 @@
-"""
-CLI module for ExplainFlow.
+"""CLI module for ExplainFlow.
 
 Provides command-line interface using Typer.
 """
@@ -8,7 +7,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def main():
@@ -33,7 +31,7 @@ def main():
             exists=True,
             readable=True,
         ),
-        output: Optional[Path] = typer.Option(
+        output: Path | None = typer.Option(
             None, "--output", "-o", help="Output file (png, gif, mp4, html, md)"
         ),
         theme: str = typer.Option(
@@ -51,17 +49,12 @@ def main():
         simple: bool = typer.Option(
             False, "--simple", "-s", help="Use simple output (no colors)"
         ),
-        heap: bool = typer.Option(
-            False, "--heap", help="Track heap objects"
-        ),
-        profile: bool = typer.Option(
-            False, "--profile", help="Record per-step timing"
-        ),
+        heap: bool = typer.Option(False, "--heap", help="Track heap objects"),
+        profile: bool = typer.Option(False, "--profile", help="Record per-step timing"),
     ):
-        """
-        Run and explain a Python file step-by-step.
+        """Run and explain a Python file step-by-step.
 
-        Examples:
+        Examples
             explainflow run script.py
             explainflow run script.py -o output.png
             explainflow run script.py -o animation.gif --fps 2
@@ -72,11 +65,11 @@ def main():
         """
         from explainflow import (
             explain,
-            export_image,
             export_gif,
             export_html,
-            export_video,
+            export_image,
             export_markdown,
+            export_video,
         )
 
         code = file.read_text()
@@ -131,8 +124,7 @@ def main():
         code: str = typer.Argument(..., help="Python code string to explain"),
         theme: str = typer.Option("dark", "--theme", "-t", help="Color theme"),
     ):
-        """
-        Explain a code snippet directly.
+        """Explain a code snippet directly.
 
         Example:
             explainflow explain-code "x = 5; y = 10; print(x + y)"
@@ -147,13 +139,13 @@ def main():
         file: Path = typer.Argument(..., help="Python file to watch", exists=True),
         theme: str = typer.Option("dark", "--theme", "-t", help="Color theme"),
     ):
-        """
-        Watch a file and re-run explanation on changes.
+        """Watch a file and re-run explanation on changes.
 
         Example:
             explainflow watch script.py
         """
         import time
+
         from explainflow import explain
 
         typer.echo(f"👀 Watching {file.name} for changes... (Ctrl+C to stop)")
@@ -166,7 +158,7 @@ def main():
                 if current_mtime != last_mtime:
                     last_mtime = current_mtime
                     typer.clear()
-                    typer.echo(f"🔄 File changed, re-running...\n")
+                    typer.echo("🔄 File changed, re-running...\n")
                     code = file.read_text()
                     explain(code, output="rich", theme=theme)
                 time.sleep(0.5)

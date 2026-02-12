@@ -1,5 +1,4 @@
-"""
-Tracer module for ExplainFlow.
+"""Tracer module for ExplainFlow.
 
 Handles code execution tracing using sys.settrace.
 Supports: breakpoints, call stack tracking, heap/memory diagrams,
@@ -9,30 +8,34 @@ performance profiling, and multi-file tracing.
 
 from __future__ import annotations
 
-import sys
-import io
-import os
-import time
-import linecache
 import functools
-from contextlib import redirect_stdout, redirect_stderr
-from typing import Any, Callable, Optional
+import io
+import linecache
+import os
+import sys
+import time
+from contextlib import redirect_stderr, redirect_stdout
 from types import FrameType
+from typing import Any, Callable
 
 from explainflow.models import (
-    ExecutionTrace, ExecutionStep, StepType, Variable,
-    HeapObject, StackFrame,
+    ExecutionStep,
+    ExecutionTrace,
+    HeapObject,
+    StackFrame,
+    StepType,
+    Variable,
 )
 
 
-class _MaxStepsExceeded(Exception):
+class _MaxStepsError(Exception):
     """Internal exception to stop execution when max steps reached."""
+
     pass
 
 
 class Tracer:
-    """
-    Traces Python code execution step-by-step.
+    """Traces Python code execution step-by-step.
 
     Uses sys.settrace to capture each line execution, function calls,
     returns, and exceptions.  Supports breakpoints, heap tracking,
@@ -43,15 +46,14 @@ class Tracer:
     def __init__(
         self,
         max_steps: int = 1000,
-        breakpoints: Optional[set[int]] = None,
+        breakpoints: set[int] | None = None,
         track_heap: bool = True,
         track_call_stack: bool = True,
         profile: bool = False,
         trace_external: bool = False,
-        external_files: Optional[set[str]] = None,
+        external_files: set[str] | None = None,
     ):
-        """
-        Initialize the tracer.
+        """Initialize the tracer.
 
         Args:
             max_steps: Maximum number of steps to trace (prevents infinite loops)
@@ -60,7 +62,8 @@ class Tracer:
             track_call_stack: Whether to capture call stack per step
             profile: Whether to record per-step timing
             trace_external: Whether to trace code in external (imported) files
-            external_files: Set of absolute file paths to also trace when trace_external=True
+            external_files: Set of absolute file paths to also trace
+                when trace_external=True
         """
         self.max_steps = max_steps
         self.breakpoints = breakpoints
@@ -90,8 +93,7 @@ class Tracer:
     # ------------------------------------------------------------------
 
     def trace(self, code: str) -> ExecutionTrace:
-        """
-        Trace the execution of a code string.
+        """Trace the execution of a code string.
 
         Args:
             code: Python code to trace
@@ -100,20 +102,20 @@ class Tracer:
             ExecutionTrace containing all steps
         """
         self._reset()
-        self.code_lines = code.strip().split('\n')
+        self.code_lines = code.strip().split("\n")
 
         # Handle empty code
         if not code.strip():
             return ExecutionTrace(code=code, success=True, total_lines=0)
 
         exec_namespace = {
-            '__name__': '__main__',
-            '__doc__': None,
-            '__builtins__': __builtins__,
+            "__name__": "__main__",
+            "__doc__": None,
+            "__builtins__": __builtins__,
         }
 
         try:
-            compiled = compile(code, self.traced_filename, 'exec')
+            compiled = compile(code, self.traced_filename, "exec")
         except SyntaxError as e:
             return ExecutionTrace(
                 code=code,
@@ -123,39 +125,47 @@ class Tracer:
             )
 
         linecache.cache[self.traced_filename] = (
-            len(code), None, self.code_lines, self.traced_filename,
+            len(code),
+            None,
+            self.code_lines,
+            self.traced_filename,
         )
 
         success = True
         error_message = ""
 
         try:
-            with redirect_stdout(self.output_buffer), redirect_stderr(self.output_buffer):
+            with (
+                redirect_stdout(self.output_buffer),
+                redirect_stderr(self.output_buffer),
+            ):
                 sys.settrace(self._trace_callback)
                 try:
                     exec(compiled, exec_namespace)
                 finally:
                     sys.settrace(None)
-        except _MaxStepsExceeded:
+        except _MaxStepsError:
             sys.settrace(None)
         except Exception as e:
             success = False
             error_message = f"{type(e).__name__}: {str(e)}"
             if self.steps:
                 last_step = self.steps[-1]
-                self.steps.append(ExecutionStep(
-                    step_number=len(self.steps) + 1,
-                    line_number=last_step.line_number,
-                    line_content=last_step.line_content,
-                    step_type=StepType.EXCEPTION,
-                    variables=self.current_variables.copy(),
-                    exception=e,
-                    explanation=f"Exception raised: {error_message}",
-                ))
+                self.steps.append(
+                    ExecutionStep(
+                        step_number=len(self.steps) + 1,
+                        line_number=last_step.line_number,
+                        line_content=last_step.line_content,
+                        step_type=StepType.EXCEPTION,
+                        variables=self.current_variables.copy(),
+                        exception=e,
+                        explanation=f"Exception raised: {error_message}",
+                    )
+                )
 
         final_vars = {}
         for name, value in exec_namespace.items():
-            if not name.startswith('_'):
+            if not name.startswith("_"):
                 final_vars[name] = Variable.from_value(name, value)
 
         if self.traced_filename in linecache.cache:
@@ -174,6 +184,7 @@ class Tracer:
     def trace_function(self, func: Callable, *args, **kwargs) -> ExecutionTrace:
         """Trace a function execution with given arguments."""
         import inspect
+
         source = inspect.getsource(func)
         arg_strs = [repr(a) for a in args]
         kwarg_strs = [f"{k}={repr(v)}" for k, v in kwargs.items()]
@@ -182,8 +193,7 @@ class Tracer:
         return self.trace(code)
 
     def trace_file(self, filepath: str) -> ExecutionTrace:
-        """
-        Trace execution of a Python file (multi-file tracing).
+        """Trace execution of a Python file (multi-file tracing).
 
         Args:
             filepath: Path to the Python file to trace
@@ -192,7 +202,7 @@ class Tracer:
             ExecutionTrace of the file execution
         """
         filepath = os.path.abspath(filepath)
-        with open(filepath, 'r') as f:
+        with open(filepath) as f:
             code = f.read()
 
         if self.trace_external:
@@ -226,10 +236,15 @@ class Tracer:
             return True
         return False
 
-    def _trace_callback(self, frame: FrameType, event: str, arg: Any) -> Optional[Callable]:
+    def _trace_callback(
+        self,
+        frame: FrameType,
+        event: str,
+        arg: Any,
+    ) -> Callable | None:
         if self._stopped or self.step_count >= self.max_steps:
             self._stopped = True
-            raise _MaxStepsExceeded("Maximum trace steps exceeded")
+            raise _MaxStepsError("Maximum trace steps exceeded")
 
         if not self._should_trace_file(frame.f_code.co_filename):
             return self._trace_callback
@@ -241,7 +256,7 @@ class Tracer:
             line_content = ""
 
         # Breakpoint check: if breakpoints set and we're on a 'line' event
-        if self.breakpoints and event == 'line' and line_no not in self.breakpoints:
+        if self.breakpoints and event == "line" and line_no not in self.breakpoints:
             # Still need to track state for when we do hit a breakpoint
             return self._trace_callback
 
@@ -260,18 +275,19 @@ class Tracer:
             loop_iteration = self._loop_counters[line_no]
 
         # Call stack management
-        if event == 'call':
+        if event == "call":
             self.call_depth += 1
             fname = frame.f_code.co_name
             sf = StackFrame(
-                function_name=fname if fname != '<module>' else '<module>',
+                function_name=fname if fname != "<module>" else "<module>",
                 line_number=line_no,
             )
             self._call_stack.append(sf)
-        elif event == 'return':
+        elif event == "return":
             self.call_depth = max(0, self.call_depth - 1)
             if self._call_stack:
-                self._call_stack[-1].return_value = repr(arg) if arg is not None else None
+                ret = repr(arg) if arg is not None else None
+                self._call_stack[-1].return_value = ret
                 self._call_stack.pop()
 
         # Capture variables
@@ -287,7 +303,12 @@ class Tracer:
         if self.track_heap:
             heap_objects = self._capture_heap(frame)
 
-        explanation = self._generate_explanation(step_type, line_content, variables, arg)
+        explanation = self._generate_explanation(
+            step_type,
+            line_content,
+            variables,
+            arg,
+        )
 
         self.step_count += 1
         step = ExecutionStep(
@@ -297,18 +318,27 @@ class Tracer:
             step_type=step_type,
             variables=variables,
             output=self.output_buffer.getvalue(),
-            return_value=arg if event == 'return' else None,
-            function_name=frame.f_code.co_name if frame.f_code.co_name != '<module>' else None,
+            return_value=arg if event == "return" else None,
+            function_name=(
+                frame.f_code.co_name if frame.f_code.co_name != "<module>" else None
+            ),
             call_depth=self.call_depth,
             explanation=explanation,
             heap_objects=heap_objects,
-            call_stack=[StackFrame(
-                function_name=sf.function_name,
-                line_number=sf.line_number,
-                local_variables=sf.local_variables.copy(),
-                arguments=sf.arguments.copy(),
-                return_value=sf.return_value,
-            ) for sf in self._call_stack] if self.track_call_stack else [],
+            call_stack=(
+                [
+                    StackFrame(
+                        function_name=sf.function_name,
+                        line_number=sf.line_number,
+                        local_variables=sf.local_variables.copy(),
+                        arguments=sf.arguments.copy(),
+                        return_value=sf.return_value,
+                    )
+                    for sf in self._call_stack
+                ]
+                if self.track_call_stack
+                else []
+            ),
             loop_iteration=loop_iteration,
             timestamp=now if self.profile else 0.0,
             duration_ms=duration_ms,
@@ -319,48 +349,66 @@ class Tracer:
 
         return self._trace_callback
 
-    def _classify_event(self, event: str, line_content: str, frame: FrameType) -> StepType:
+    def _classify_event(
+        self,
+        event: str,
+        line_content: str,
+        frame: FrameType,
+    ) -> StepType:
         """Classify an event into a StepType."""
         stripped = line_content.strip()
 
-        if event == 'call':
+        if event == "call":
             return StepType.CALL
-        elif event == 'return':
+        elif event == "return":
             return StepType.RETURN
-        elif event == 'exception':
+        elif event == "exception":
             return StepType.EXCEPTION
 
         # 'line' event
-        if not stripped or stripped.startswith('#'):
+        if not stripped or stripped.startswith("#"):
             return StepType.LINE
 
         # Context managers
-        if stripped.startswith('with '):
+        if stripped.startswith("with "):
             return StepType.CONTEXT_ENTER
 
         # Yield / async
-        if stripped.startswith('yield ') or stripped == 'yield':
+        if stripped.startswith("yield ") or stripped == "yield":
             return StepType.YIELD
-        if stripped.startswith('yield from '):
+        if stripped.startswith("yield from "):
             return StepType.YIELD_FROM
-        if stripped.startswith('await '):
+        if stripped.startswith("await "):
             return StepType.AWAIT
 
         # Assignments (including augmented)
-        if '=' in stripped and not any(op in stripped for op in ['==', '!=', '<=', '>=', '+=', '-=', '*=', '/=']):
+        non_assign_ops = ["==", "!=", "<=", ">=", "+=", "-=", "*=", "/="]
+        if "=" in stripped and not any(op in stripped for op in non_assign_ops):
             return StepType.ASSIGNMENT
-        if any(op in stripped for op in ['+=', '-=', '*=', '/=', '//=', '%=', '**=', '&=', '|=', '^=']):
+        aug_ops = [
+            "+=",
+            "-=",
+            "*=",
+            "/=",
+            "//=",
+            "%=",
+            "**=",
+            "&=",
+            "|=",
+            "^=",
+        ]
+        if any(op in stripped for op in aug_ops):
             return StepType.ASSIGNMENT
 
         # Loops
-        if stripped.startswith(('for ', 'while ')):
+        if stripped.startswith(("for ", "while ")):
             # Check if this is a repeated visit (iteration)
             if self._loop_counters.get(frame.f_lineno, 0) > 0:
                 return StepType.LOOP_ITERATION
             return StepType.LOOP_START
 
         # Conditions
-        if stripped.startswith(('if ', 'elif ', 'else')):
+        if stripped.startswith(("if ", "elif ", "else")):
             return StepType.CONDITION
 
         return StepType.LINE
@@ -369,29 +417,33 @@ class Tracer:
         """Capture current local variables from frame."""
         variables = {}
         for name, value in frame.f_locals.items():
-            if name.startswith('_'):
+            if name.startswith("_"):
                 continue
-            if callable(value) and not hasattr(value, '__explainflow_traced__'):
+            if callable(value) and not hasattr(value, "__explainflow_traced__"):
                 continue
             previous = self.previous_variables.get(name)
             variables[name] = Variable.from_value(name, value, previous)
-        self.previous_variables = {
-            name: var.value for name, var in variables.items()
-        }
+        self.previous_variables = {name: var.value for name, var in variables.items()}
         return variables
 
     def _capture_heap(self, frame: FrameType) -> dict[int, HeapObject]:
         """Build a snapshot of heap objects reachable from local variables."""
         heap: dict[int, HeapObject] = {}
         for name, value in frame.f_locals.items():
-            if name.startswith('_'):
+            if name.startswith("_"):
                 continue
-            if callable(value) and not hasattr(value, '__explainflow_traced__'):
+            if callable(value) and not hasattr(value, "__explainflow_traced__"):
                 continue
             self._walk_heap(value, heap, depth=0, max_depth=3)
         return heap
 
-    def _walk_heap(self, value: Any, heap: dict[int, HeapObject], depth: int, max_depth: int):
+    def _walk_heap(
+        self,
+        value: Any,
+        heap: dict[int, HeapObject],
+        depth: int,
+        max_depth: int,
+    ):
         """Recursively walk object graph to build heap snapshot."""
         obj_id = id(value)
         if obj_id in heap or depth > max_depth:
@@ -410,8 +462,11 @@ class Tracer:
             pass
 
     def _generate_explanation(
-        self, step_type: StepType, line_content: str,
-        variables: dict[str, Variable], arg: Any,
+        self,
+        step_type: StepType,
+        line_content: str,
+        variables: dict[str, Variable],
+        arg: Any,
     ) -> str:
         stripped = line_content.strip()
 
@@ -420,24 +475,28 @@ class Tracer:
             if changed:
                 var = changed[0]
                 return f"Set {var.name} to {var.repr_value}"
-            elif '=' in stripped:
-                parts = stripped.split('=', 1)
+            elif "=" in stripped:
+                parts = stripped.split("=", 1)
                 if len(parts) == 2:
                     var_name = parts[0].strip()
                     if var_name in variables:
                         return f"Set {var_name} to {variables[var_name].repr_value}"
             return f"Assignment: {stripped}"
         elif step_type == StepType.LOOP_START:
-            return f"Starting loop: {stripped}" if stripped.startswith('for ') else f"Checking loop condition: {stripped}"
+            if stripped.startswith("for "):
+                return f"Starting loop: {stripped}"
+            return f"Checking loop condition: {stripped}"
         elif step_type == StepType.LOOP_ITERATION:
-            cnt = max(self._loop_counters.get(0, 1), 1)
+            max(self._loop_counters.get(0, 1), 1)
             return f"Loop iteration: {stripped}"
         elif step_type == StepType.CONDITION:
             return f"Evaluating condition: {stripped}"
         elif step_type == StepType.CALL:
             return "Calling function"
         elif step_type == StepType.RETURN:
-            return f"Returning: {repr(arg)}" if arg is not None else "Returning from function"
+            if arg is not None:
+                return f"Returning: {repr(arg)}"
+            return "Returning from function"
         elif step_type == StepType.EXCEPTION:
             return f"Exception: {arg}" if arg else "Exception occurred"
         elif step_type == StepType.CONTEXT_ENTER:
@@ -454,9 +513,8 @@ class Tracer:
         return f"Executing: {stripped}" if stripped else "Empty line"
 
 
-def trace(func: Optional[Callable] = None, *, output: str = "rich", max_steps: int = 1000):
-    """
-    Decorator to trace function execution.
+def trace(func: Callable | None = None, *, output: str = "rich", max_steps: int = 1000):
+    """Decorator to trace function execution.
 
     Can be used with or without parentheses:
         @trace
@@ -465,6 +523,7 @@ def trace(func: Optional[Callable] = None, *, output: str = "rich", max_steps: i
         @trace(output="simple")
         def my_func(): ...
     """
+
     def decorator(f: Callable) -> Callable:
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
@@ -473,6 +532,7 @@ def trace(func: Optional[Callable] = None, *, output: str = "rich", max_steps: i
 
             if output != "silent":
                 from explainflow.visualizer import Visualizer
+
                 visualizer = Visualizer()
                 if output == "rich":
                     visualizer.display_rich(trace_result)
