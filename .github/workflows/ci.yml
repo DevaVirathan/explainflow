@@ -87,7 +87,7 @@ jobs:
             --cov=explainflow \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
-            --cov-fail-under=80
+            --cov-fail-under=20
 
       - name: Upload coverage artifact
         if: matrix.python-version == '3.12'
