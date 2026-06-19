@@ -62,13 +62,16 @@ class Tracer:
         self.call_depth = 0
         self._stopped = False
         
-        # Prepare execution environment
-        exec_globals = {
+        # Prepare execution environment.
+        # Use a single namespace for globals and locals so that module-level
+        # names (including recursive and mutually-referencing functions) resolve
+        # correctly. With separate dicts, top-level defs land in locals while a
+        # function's __globals__ points at the empty globals, breaking recursion.
+        exec_namespace = {
             '__name__': '__main__',
             '__doc__': None,
             '__builtins__': __builtins__,
         }
-        exec_locals = {}
         
         # Compile code
         try:
@@ -98,7 +101,7 @@ class Tracer:
             with redirect_stdout(self.output_buffer), redirect_stderr(self.output_buffer):
                 sys.settrace(self._trace_callback)
                 try:
-                    exec(compiled, exec_globals, exec_locals)
+                    exec(compiled, exec_namespace)
                 finally:
                     sys.settrace(None)
         except Exception as e:
@@ -118,11 +121,15 @@ class Tracer:
                     explanation=f"Exception raised: {error_message}"
                 ))
         
-        # Build final variables from exec_locals
+        # Build final variables from the execution namespace, skipping internal
+        # names and callables (functions/classes) so the summary shows data only.
         final_vars = {}
-        for name, value in exec_locals.items():
-            if not name.startswith('_'):
-                final_vars[name] = Variable.from_value(name, value)
+        for name, value in exec_namespace.items():
+            if name.startswith('_'):
+                continue
+            if callable(value) and not hasattr(value, '__explainflow_traced__'):
+                continue
+            final_vars[name] = Variable.from_value(name, value)
         
         # Clean up linecache
         if self.traced_filename in linecache.cache:

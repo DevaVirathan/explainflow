@@ -207,40 +207,49 @@ def export_gif(
     except ImportError:
         raise ImportError("Pillow is required for GIF export. Install with: pip install pillow")
     
-    # Generate frame for each step
-    frames = []
-    temp_files = []
-    
-    for i in range(1, len(trace.steps) + 1):
-        temp_filename = f"/tmp/explainflow_frame_{i}.png"
-        export_image(trace, temp_filename, theme=theme, step=i, width=width)
-        frames.append(Image.open(temp_filename))
-        temp_files.append(temp_filename)
-    
-    if not frames:
+    if not trace.steps:
         raise ValueError("No steps to export")
-    
-    # Calculate duration per frame in milliseconds
-    duration = int(1000 / fps)
-    
-    # Save as GIF
-    output_path = Path(filename)
-    frames[0].save(
-        output_path,
-        save_all=True,
-        append_images=frames[1:],
-        duration=duration,
-        loop=0 if loop else 1
-    )
-    
-    # Clean up temp files
+
     import os
-    for temp_file in temp_files:
+    import tempfile
+
+    # Render one frame per step into a temp directory (cross-platform; the old
+    # hardcoded "/tmp" path did not exist on Windows).
+    frames = []
+    temp_dir = tempfile.mkdtemp(prefix="explainflow_")
+    try:
+        for i in range(1, len(trace.steps) + 1):
+            temp_filename = os.path.join(temp_dir, f"frame_{i}.png")
+            export_image(trace, temp_filename, theme=theme, step=i, width=width)
+            with Image.open(temp_filename) as frame:
+                frames.append(frame.copy())
+
+        # Calculate duration per frame in milliseconds
+        duration = int(1000 / fps)
+
+        # Save as GIF
+        output_path = Path(filename)
+        frames[0].save(
+            output_path,
+            save_all=True,
+            append_images=frames[1:],
+            duration=duration,
+            loop=0 if loop else 1
+        )
+    finally:
+        # Clean up temp frames and directory
+        for f in frames:
+            f.close()
         try:
-            os.remove(temp_file)
+            for name in os.listdir(temp_dir):
+                try:
+                    os.remove(os.path.join(temp_dir, name))
+                except OSError:
+                    pass
+            os.rmdir(temp_dir)
         except OSError:
             pass
-    
+
     return output_path
 
 
@@ -539,6 +548,6 @@ def export_html(
 """
     
     output_path = Path(filename)
-    output_path.write_text(html_content)
-    
+    output_path.write_text(html_content, encoding="utf-8")
+
     return output_path
